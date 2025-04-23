@@ -95,12 +95,6 @@ prefetch PRJNA1199049
 fasterq-dump --split-files SRR*
 ```
 
-### Step 4: Configure pipeline
-
-Edit the `config/pipeline_config.yaml` file to specify paths to reference files and adjust parameters.
-
-
-
 ## Usage
 
 ### Workflow Steps:
