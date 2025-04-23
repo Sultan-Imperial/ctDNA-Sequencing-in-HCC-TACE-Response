@@ -1,7 +1,7 @@
 # ctDNA Sequencing in HCC-TACE Response Analysis
 
 [![BioProject](https://img.shields.io/badge/BioProject-PRJNA1199049-brightgreen.svg)](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA1199049)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-Academic%20Use-yellow.svg)](LICENSE)
 
 ## Project Description
 
