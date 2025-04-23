@@ -102,50 +102,78 @@ Edit the `config/pipeline_config.yaml` file to specify paths to reference files 
 1.  **UMI Extraction & QC:** `bash scripts/preprocess_reads.sh ...` [TODO: Add specific example]
 
    
-3.  **Alignment:** `bash scripts/run_alignment.sh ...` [TODO: Add specific example]
-```bash
-#!/bin/bash
-# scripts/2_alignment.sh - Align reads to reference genome
+3.  **Alignment & Sorting (BWA + Samtools):**
+*This script processes a list of sample prefixes (one per line, provided as input `$1`), aligning corresponding paired-end FASTQ files (`${prefix}_R1.fastq.gz`, `${prefix}_R2.fastq.gz`) and creating sorted BAM files.*
+    ```bash
+    #!/bin/bash
+    # --- Configuration (Consider moving these to a config file) ---
+    BWA_INDEX_BASE="/path/to/reference/BWA_GRCh38.fa" # BWA index prefix
+    OUTPUT_BAM_DIR="/path/to/output/BAM"
+    TEMP_DIR="/path/to/temp/sorting_temp" # Temporary directory for sorting
+    THREADS=8 # Number of threads for BWA and Samtools
+    MEM_PER_THREAD="4G" # Memory per thread for Samtools sort
 
-BWA_INDEX_BASE="${GENOME_DIR}/GRCh38.fa"
-OUTPUT_BAM_DIR="results/aligned_bams"
-TEMP_DIR="temp/sorting_temp"
+    mkdir -p $OUTPUT_BAM_DIR $TEMP_DIR
 
-mkdir -p $OUTPUT_BAM_DIR $TEMP_DIR
-
-if [ -z "$1" ]; then
-  echo "Usage: $0 <file_with_sample_prefixes>"
-  exit 1
-fi
-
-while IFS= read -r line || [[ -n "$line" ]]; do
-    echo "Processing Sample: $line"
-    
-    FASTQ1="${line}_R1.fastq.gz"
-    FASTQ2="${line}_R2.fastq.gz"
-    
-    # Check if FASTQ files exist
-    if [[ ! -f "$FASTQ1" || ! -f "$FASTQ2" ]]; then
-        echo "ERROR: FASTQ files not found for $line"
-        continue
+    # --- Input Validation ---
+    if [ -z "$1" ]; then
+      echo "Usage: $0 <file_with_sample_prefixes>"
+      exit 1
     fi
+    INPUT_LIST_FILE="$1"
 
-    RG_STRING="@RG\\tID:${line}\\tSM:${line}\\tLB:TARGTED-SEQ\\tPL:ILLUMINA"
-    OUTPUT_BAM="$OUTPUT_BAM_DIR/${line}.sorted.bam"
+    # --- Processing Loop ---
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        echo "Processing Sample Prefix: $line"
+        
+        # Construct FASTQ paths (Assumes files are in the current directory or specified path)
+        FASTQ1="${line}_R1.fastq.gz" # [TODO: Adjust path/naming if needed]
+        FASTQ2="${line}_R2.fastq.gz" # [TODO: Adjust path/naming if needed]
+        
+        # Check if FASTQ files exist
+        if [[ ! -f "$FASTQ1" || ! -f "$FASTQ2" ]]; then
+            echo "ERROR: FASTQ files not found for prefix $line ($FASTQ1, $FASTQ2)"
+            continue # Skip to next sample
+        fi
 
-    echo "Aligning and sorting $line..."
-    bwa mem -R "$RG_STRING" -t 8 "$BWA_INDEX_BASE" "$FASTQ1" "$FASTQ2" | \
-    samtools sort -@8 -m 4G -T "$TEMP_DIR/${line}_sort_temp" -o "$OUTPUT_BAM" -
-    
-    # Index BAM file
-    samtools index "$OUTPUT_BAM"
-    
-    echo "Completed: $line"
-    echo "---"
-done < "$1"
+        # Define Read Group string (Essential for downstream tools like GATK)
+        # ID: Unique identifier (e.g., flowcell.lane)
+        # SM: Sample Name
+        # LB: Library ID
+        # PL: Platform (e.g., ILLUMINA)
+        RG_STRING=$(echo -e "@RG\\tID:FLOWCELL1.LANE1\\tSM:$line\\tLB:TARGTED-SEQ\\tPL:ILLUMINA")
+        
+        # Define Output BAM path
+        OUTPUT_BAM="$OUTPUT_BAM_DIR/${line}.sorted.bam"
 
-echo "Alignment and sorting complete."
-```
+        echo "Aligning $FASTQ1 & $FASTQ2 with BWA..."
+        # bwa mem: Aligns reads
+        # -R: Adds Read Group information
+        # -t: Number of threads
+        # samtools sort: Sorts alignments by coordinate
+        # -@: Number of sorting threads
+        # -m: Max memory per thread
+        # -T: Temporary file prefix
+        # -o: Output BAM file
+        # - : Input is read from standard input (pipe from bwa mem)
+        bwa mem -R "$RG_STRING" -t $THREADS "$BWA_INDEX_BASE" "$FASTQ1" "$FASTQ2" | \
+        samtools sort -@ $THREADS -m $MEM_PER_THREAD -T "$TEMP_DIR/${line}_sort_temp" -o "$OUTPUT_BAM" -
+        
+        # Check samtools exit status
+        if [ $? -eq 0 ]; then
+            echo "Successfully created sorted BAM: $OUTPUT_BAM"
+            # Optional: Index the BAM file immediately
+            # samtools index -@ $THREADS $OUTPUT_BAM
+        else
+            echo "ERROR during alignment/sorting for $line. Check logs."
+        fi
+        echo "---"
+
+    done < "$INPUT_LIST_FILE"
+
+    echo "Alignment and sorting complete."
+    ```
+    *[Note: Replace placeholder paths. Adjust threads (`-t`, `-@`) and memory (`-m`) based on your system. Ensure BWA index exists.]*
 
 
 5.  **Mark Duplicates (Je Example):**
