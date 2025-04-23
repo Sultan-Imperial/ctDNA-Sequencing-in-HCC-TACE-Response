@@ -1,5 +1,8 @@
 # ctDNA Sequencing in HCC-TACE Response Analysis
 
+[![BioProject](https://img.shields.io/badge/BioProject-PRJNA1199049-brightgreen.svg)](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA1199049)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 ## Project Description
 
 This repository contains the computational analysis scripts used in the study investigating deep sequencing of circulating tumour DNA (ctDNA) as a biomarker for clinical outcomes following transarterial chemoembolisation (TACE) in patients with hepatocellular carcinoma (HCC).
