@@ -22,22 +22,17 @@ Raw sequencing data generated in this study are available from the NCBI Sequence
 
 - **BioProject:** [PRJNA1199049](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA1199049)
 
-## Repository Contents
+## Pipeline Overview
 
-This repository includes the following main scripts and components:
+Our analysis pipeline consists of the following key steps:
 
-* `[script_name_1.py/R/sh]`: [Briefly describe what this script does, e.g., Script for aligning raw sequencing reads]
-* `[script_name_2.py/R/sh]`: [Briefly describe what this script does, e.g., Script for variant calling and filtering]
-* `[script_name_3.py/R/sh]`: [Briefly describe what this script does, e.g., Script for statistical analysis and generating figures]
-* `[config_file.yaml/json]` (if applicable): [Describe the purpose of the configuration file]
-* `[environment.yml / requirements.txt]` (if applicable): [File listing software dependencies]
-* `data/` (if applicable): [Describe any small example, metadata, or annotation files included]
-
-[TODO: List the key scripts, configuration files, and directories in your repository. Provide a concise description for each.]
-
-## Primary data processing of sequencing data
-
-## Getting Started
+1. **UMI Processing & QC**: Extract UMIs from trimmed PE reads and perform quality control
+2. **Alignment & Sorting**: Map reads to GRCh38 reference genome and sort alignments
+3. **Duplicate Marking**: UMI-aware deduplication
+4. **Base Quality Recalibration**: Improve base quality scores
+5. **Variant Calling & Filtering**: Identify and filter somatic variants
+6. **Variant Annotation**: Functionally annotate variants
+7. **Downstream Analysis**: Statistical analysis and visualization
 
 ### Prerequisites
 
