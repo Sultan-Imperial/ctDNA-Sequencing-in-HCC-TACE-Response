@@ -48,21 +48,50 @@ Our analysis pipeline consists of the following key steps:
 | [R](https://www.r-project.org/) | v4.2+ | Statistical analysis |
 | [Python](https://www.python.org/) | v3.9+ | Data processing |
 
+### Data Requirements
+
+- **Reference Genome**: GRCh38 FASTA and BWA index files
+- **Known Sites Files**: dbSNP VCF, gnomAD VCF, Panel of Normals (PON) VCF
+- **Target Interval BED file**: HCC panel target regions
+- **Funcotator Data Sources**: For variant annotation
+
+
+
 ### Installation / Setup
 
-1.  **Clone the repository:**
-    ```bash
-    git clone [https://docs.github.com/repositories/creating-and-managing-repositories/about-repositories](https://docs.github.com/repositories/creating-and-managing-repositories/about-repositories)
-    cd [repository-folder-name]
-    ```
-    *[Note: The URL `https://docs.github.com/...` in the previous version was incorrect placeholder, replace with your actual repository URL]*
-2.  **Set up the environment (if applicable):**
-    * Using Conda: `conda env create -f environment.yml`
-    * Using pip: `pip install -r requirements.txt`
-    * [Add any other manual setup steps required, e.g., compiling tools]
-3.  **Download Data:** Obtain the raw sequencing data from NCBI SRA using the accession **PRJNA1199049**. You may need tools like `sra-tools` for this. [Add specific instructions or links if helpful]. Ensure the data is placed in the expected directory structure for the scripts.
+### Step 1: Clone the repository
 
-[TODO: Adjust these steps based on your actual project setup and how the scripts expect data.]
+```bash
+git clone https://github.com/username/ctDNA-HCC-TACE-Analysis.git
+cd ctDNA-HCC-TACE-Analysis
+```
+### Step 2: Create the environment
+
+```bash
+# Using Conda (recommended)
+conda env create -f environment.yml
+
+# Activate the environment
+conda activate ctdna-hcc
+```
+
+### Step 3: Obtain raw data
+
+Download the raw sequencing data from NCBI SRA:
+
+```bash
+# Install SRA Toolkit if needed
+conda install -c bioconda sra-tools
+
+# Download data
+prefetch PRJNA1199049
+fasterq-dump --split-files SRR*
+```
+
+### Step 4: Configure pipeline
+
+Edit the `config/pipeline_config.yaml` file to specify paths to reference files and adjust parameters.
+
 
 
 ## Usage
