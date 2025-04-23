@@ -69,17 +69,13 @@ Our analysis pipeline consists of the following key steps:
 ### Step 1: Clone the repository
 
 ```bash
-git clone https://github.com/username/ctDNA-HCC-TACE-Analysis.git
+git clone https://github.com/Sultan-Imperial/ctDNA-Sequencing-in-HCC-TACE-Response.git
 cd ctDNA-HCC-TACE-Analysis
 ```
 ### Step 2: Create the environment
 
 ```bash
 # Using Conda (recommended)
-conda env create -f environment.yml
-
-# Activate the environment
-conda activate ctdna-hcc
 ```
 
 ### Step 3: Obtain raw data
