@@ -206,7 +206,11 @@ Edit the `config/pipeline_config.yaml` file to specify paths to reference files 
     *[Note: Replace `[path/to/je.jar]`, `[e.g., 8g]`, and output paths. Ensure the input `$line` variable correctly points to the BAM file from the previous step.]*
 
 
-6.  **Merge BAMs (if needed):** `bash scripts/merge_bams.sh ...` [TODO: Add specific example]
+4.  **Merge BAMs (if needed):**
+    ```bash
+    # Example using samtools merge if multiple BAMs per sample exist
+    samtools merge -@ $THREADS /path/to/output/merged/${sample_id}.merged.bam /path/to/input/${sample_id}.run1.bam /path/to/input/${sample_id}.run2.bam
+    ```
 
 7.  **Downstream Analysis (GATK Example Script):**
     *The following script demonstrates BQSR, Mutect2 variant calling, filtering, and annotation steps using GATK 4.2.6.1. It expects a file containing a list of input BAM file paths as its first argument (`$1`). Adjust paths to tools, reference files, and output directories.*
