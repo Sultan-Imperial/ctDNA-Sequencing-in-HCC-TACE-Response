@@ -98,28 +98,57 @@ Edit the `config/pipeline_config.yaml` file to specify paths to reference files 
 
 ### Workflow Steps:
 
+
+1.  **UMI Extraction & QC:** `bash scripts/preprocess_reads.sh ...` [TODO: Add specific example]
+
+   
+3.  **Alignment:** `bash scripts/run_alignment.sh ...` [TODO: Add specific example]
 ```bash
-# 1. Preprocess reads (UMI extraction & QC)
-bash scripts/1_preprocess_reads.sh sample_list.txt
+#!/bin/bash
+# scripts/2_alignment.sh - Align reads to reference genome
 
-# 2. Alignment
-bash scripts/2_alignment.sh sample_list.txt
+BWA_INDEX_BASE="${GENOME_DIR}/GRCh38.fa"
+OUTPUT_BAM_DIR="results/aligned_bams"
+TEMP_DIR="temp/sorting_temp"
 
-# 3. Mark duplicates with UMIs
-bash scripts/3_mark_duplicates.sh bam_list.txt
+mkdir -p $OUTPUT_BAM_DIR $TEMP_DIR
 
-# 4. BQSR & variant calling
-bash scripts/4_bqsr_and_variant_calling.sh recal_bam_list.txt
+if [ -z "$1" ]; then
+  echo "Usage: $0 <file_with_sample_prefixes>"
+  exit 1
+fi
 
-# 5. Statistical analysis
-Rscript scripts/5_statistical_analysis.R
+while IFS= read -r line || [[ -n "$line" ]]; do
+    echo "Processing Sample: $line"
+    
+    FASTQ1="${line}_R1.fastq.gz"
+    FASTQ2="${line}_R2.fastq.gz"
+    
+    # Check if FASTQ files exist
+    if [[ ! -f "$FASTQ1" || ! -f "$FASTQ2" ]]; then
+        echo "ERROR: FASTQ files not found for $line"
+        continue
+    fi
+
+    RG_STRING="@RG\\tID:${line}\\tSM:${line}\\tLB:TARGTED-SEQ\\tPL:ILLUMINA"
+    OUTPUT_BAM="$OUTPUT_BAM_DIR/${line}.sorted.bam"
+
+    echo "Aligning and sorting $line..."
+    bwa mem -R "$RG_STRING" -t 8 "$BWA_INDEX_BASE" "$FASTQ1" "$FASTQ2" | \
+    samtools sort -@8 -m 4G -T "$TEMP_DIR/${line}_sort_temp" -o "$OUTPUT_BAM" -
+    
+    # Index BAM file
+    samtools index "$OUTPUT_BAM"
+    
+    echo "Completed: $line"
+    echo "---"
+done < "$1"
+
+echo "Alignment and sorting complete."
 ```
 
 
-
-1.  **UMI Extraction & QC:** `bash scripts/preprocess_reads.sh ...` [TODO: Add specific example]
-2.  **Alignment:** `bash scripts/run_alignment.sh ...` [TODO: Add specific example]
-3.  **Mark Duplicates (Je Example):**
+5.  **Mark Duplicates (Je Example):**
     *The following command uses `je markdupes`. It assumes the input BAM filename is stored in a shell variable `$line`. Adjust paths and memory (`-Xmx`) as needed.*
     ```bash
     # Example assuming input file path is in variable $line
@@ -134,9 +163,9 @@ Rscript scripts/5_statistical_analysis.R
     ```
     *[Note: Replace `[Mem]` (e.g., `4g`), `[path/to/je.jar]`, and output paths with appropriate values.]*
 
-4.  **Merge BAMs (if needed):** `bash scripts/merge_bams.sh ...` [TODO: Add specific example]
+6.  **Merge BAMs (if needed):** `bash scripts/merge_bams.sh ...` [TODO: Add specific example]
 
-5.  **Downstream Analysis (GATK Example Script):**
+7.  **Downstream Analysis (GATK Example Script):**
     *The following script demonstrates BQSR, Mutect2 variant calling, filtering, and annotation steps using GATK 4.2.6.1. It expects a file containing a list of input BAM file paths as its first argument (`$1`). Adjust paths to tools, reference files, and output directories.*
     ```bash
     #!/bin/bash
