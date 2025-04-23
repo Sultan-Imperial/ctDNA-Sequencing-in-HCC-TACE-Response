@@ -12,10 +12,9 @@ The primary purpose of this repository is to provide the code used for the analy
 
 ## Related Publication
 
-The methods and results using these scripts are detailed in the following publication:
+**Title:** Deep sequencing of circulating tumour DNA as a biomarker of clinical outcome to transarterial chemoembolisation in hepatocellular carcinoma
 
-**Title:** Deep sequencing of circulating tumour DNA as a biomarker of clinical outcome to transarterial chemoembolisation in hepatocellular carcinoma.
-**Authors:** Rohini Sharma, Sultan N. Alharbi, Ksenia Ellum, Leila Motedayen-Aval, Andrea Casadei-Gardini, David J. Pinato, Dominik Bettinger, Bertram Bengsch, Rishi Patel, Joanne Evans.
+**Authors:** Rohini Sharma, Sultan N. Alharbi, Ksenia Ellum, Leila Motedayen-Aval, Andrea Casadei-Gardini, David J. Pinato, Dominik Bettinger, Bertram Bengsch, Rishi Patel, Joanne Evans
 
 ## Data Availability
 
