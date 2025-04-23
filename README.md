@@ -61,7 +61,7 @@ Our analysis pipeline consists of the following key steps:
     * Panel of Normals (PON) VCF file: `1000g_pon.hg38.vcf.gz` ([Link](https://storage.googleapis.com/gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz), requires `.tbi` index file too) for GATK Mutect2
     * Germline Resource VCF file: `af-only-gnomad.hg38.vcf.gz` ([Link](https://storage.googleapis.com/gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz), requires `.tbi` index file too) for GATK Mutect2
     * Target Regions BED file (`.bed`) - Included in `data/`? [TODO: Confirm location or provide source]
-    * Funcotator Data Sources (Version `v1.7.20200521s` used in example GATK command): `funcotator_dataSources.v1.7.20200521s.tar.gz` ([Link](https://storage.googleapis.com/gatk-best-practices/funcotator/funcotator_dataSources.v1.7.20200521s.tar.gz)) - Required for GATK Funcotator annotation.
+    * Funcotator Data Sources (Version `v1.7.20200521s` used in example GATK command): `funcotator_dataSources.v1.7.20200521s.tar.gz` ([Link](https://console.cloud.google.com/storage/browser/broad-public-datasets/funcotator)) - Required for GATK Funcotator annotation.
 
 
 ### Installation / Setup
