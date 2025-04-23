@@ -3,9 +3,10 @@
 [![BioProject](https://img.shields.io/badge/BioProject-PRJNA1199049-brightgreen.svg)](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA1199049)
 [![License](https://img.shields.io/badge/License-Academic%20Use-yellow.svg)](LICENSE)
 
-## Project Description
+## Overview
 
-This repository contains the computational analysis scripts used in the study investigating deep sequencing of circulating tumour DNA (ctDNA) as a biomarker for clinical outcomes following transarterial chemoembolisation (TACE) in patients with hepatocellular carcinoma (HCC).
+This repository contains the computational analysis pipeline used in our study of circulating tumor DNA (ctDNA) as a biomarker for clinical outcomes following transarterial chemoembolization (TACE) in patients with hepatocellular carcinoma (HCC).
+
 
 The primary purpose of this repository is to provide the code used for the analyses presented in the associated publication, facilitating the reproducibility of the study's findings.
 
