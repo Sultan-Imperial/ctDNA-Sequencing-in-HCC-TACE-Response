@@ -49,24 +49,6 @@ Our analysis pipeline consists of the following key steps:
 | [R](https://www.r-project.org/) | v4.2+ | Statistical analysis |
 | [Python](https://www.python.org/) | v3.9+ | Data processing |
 
-### Prerequisites
-
-* Java Runtime Environment (for Je & GATK)
-* Python [Version, e.g., 3.9+]
-* R [Version, e.g., 4.2+]
-* UMI-tools (v1.0.0)
-* FastQC (v0.11.9)
-* BWA (v.0.7.17)
-* Je-MarkDuplicates (`org.embl.gbcs.je.jeduplicates.MarkDuplicatesWithMolecularCode`) - [TODO: Specify Je version]
-* GATK (Genome Analysis Toolkit, v4.2.6.1 used in example script)
-* [Reference Genome Files: GRCh38 FASTA]
-* [Known Sites Files: dbSNP VCF, gnomAD VCF, PON VCF]
-* [Target Interval BED file]
-* [Funcotator Data Sources]
-* [Other essential libraries/tools, e.g., pandas, Bioconductor pkgs]
-* [TODO: Ensure all required tools and data files are listed]
-
-*Recommendation: Use the provided environment file (`environment.yml` or `requirements.txt`).*
 ### Installation / Setup
 
 1.  **Clone the repository:**
