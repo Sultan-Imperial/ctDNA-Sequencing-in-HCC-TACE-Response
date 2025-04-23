@@ -55,12 +55,12 @@ Our analysis pipeline consists of the following key steps:
 - **Target Interval BED file**: HCC panel target regions
 - **Funcotator Data Sources**: For variant annotation
 * **Reference Data:** (Links point to Google Cloud Storage buckets commonly used for GATK resources. Download may require `gsutil` or browser access. Ensure corresponding index files are also downloaded/generated.)
-    * Human Reference Genome GRCh38 FASTA file (`.fa`) - [TODO: Add link to specific source used, e.g., GENCODE, UCSC, NCBI]
+    * Human Reference Genome GRCh38 FASTA file.
     * BWA Index files for GRCh38 - (Must be generated from the FASTA file using `bwa index`)
     * dbSNP VCF file: `Homo_sapiens_assembly38.dbsnp138.vcf` ([Link - GATK Bundle](https://storage.googleapis.com/gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf), requires `.vcf.idx` index file too) for GATK BQSR
     * Panel of Normals (PON) VCF file: `1000g_pon.hg38.vcf.gz` ([Link](https://storage.googleapis.com/gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz), requires `.tbi` index file too) for GATK Mutect2
     * Germline Resource VCF file: `af-only-gnomad.hg38.vcf.gz` ([Link](https://storage.googleapis.com/gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz), requires `.tbi` index file too) for GATK Mutect2
-    * Target Regions BED file (`.bed`) - Included in `data/`? [TODO: Confirm location or provide source]
+    * Target Regions BED file (`.bed`) - Included in `HCC_panel_target_regions.bed`
     * Funcotator Data Sources (Version `v1.7.20200521s` used in example GATK command): `funcotator_dataSources.v1.7.20200521s.tar.gz` ([Link](https://console.cloud.google.com/storage/browser/broad-public-datasets/funcotator)) - Required for GATK Funcotator annotation.
 
 
