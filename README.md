@@ -283,7 +283,6 @@ This repository includes the following main scripts and components:
 
 ## Disclaimer and Support
 
-**Important:** All scripts and binaries are provided **as is**, without any warranty, and for use **at your own risk**.
 
 This repository provides supplementary code to accompany the publication mentioned above. **This is not the release of a validated software package.** We are providing this information and code solely in addition to a description of methods for making it easier to reproduce our analyses as presented in the paper.
 
@@ -291,11 +290,7 @@ This repository provides supplementary code to accompany the publication mention
 
 ## Contributing
 
-This repository is intended to document and share the code used for the specific analyses in the associated publication. Therefore, contributions (e.g., pull requests) are generally not sought or expected.
-
-If you believe you have found a critical error that prevents the reproduction of the *original* published results using the provided scripts and data, you may open an Issue in the repository detailing the problem. However, please note the "no support" policy above.
-
-[Optional: If you decide to create formal contribution guidelines or a code of conduct, uncomment and link them here:]
+While this repository primarily serves to document the analysis for our publication, we welcome issue reports for critical errors that prevent reproduction of our results.
 ## License
 
 [TODO: Choose an open-source license (e.g., MIT, Apache 2.0, GPLv3) for your code. Create a `LICENSE` file in your repository containing the full license text and state the chosen license here.]
