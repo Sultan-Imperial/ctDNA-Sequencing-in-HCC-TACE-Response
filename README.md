@@ -102,7 +102,7 @@ Edit the `config/pipeline_config.yaml` file to specify paths to reference files 
 1.  **UMI Extraction & QC:** `bash scripts/preprocess_reads.sh ...` [TODO: Add specific example]
 
    
-3.  **Alignment & Sorting (BWA + Samtools):**
+2.  **Alignment & Sorting (BWA + Samtools):**
 *This script processes a list of sample prefixes (one per line, provided as input `$1`), aligning corresponding paired-end FASTQ files (`${prefix}_R1.fastq.gz`, `${prefix}_R2.fastq.gz`) and creating sorted BAM files.*
     ```bash
     #!/bin/bash
@@ -176,20 +176,35 @@ Edit the `config/pipeline_config.yaml` file to specify paths to reference files 
     *[Note: Replace placeholder paths. Adjust threads (`-t`, `-@`) and memory (`-m`) based on your system. Ensure BWA index exists.]*
 
 
-5.  **Mark Duplicates (Je Example):**
-    *The following command uses `je markdupes`. It assumes the input BAM filename is stored in a shell variable `$line`. Adjust paths and memory (`-Xmx`) as needed.*
+3.  **Mark Duplicates (Je Example):**
+    *This command processes a single sorted BAM file (path assumed to be in `$line`) to mark duplicates using UMIs.*
     ```bash
-    # Example assuming input file path is in variable $line
-    # Adjust java path and memory (-Xmx) if needed
-    java -Xmx[Mem] -jar [path/to/je.jar] markdupes \
-      INPUT=$line \
-      OUTPUT=/path/to/output/MarkDuplicated_Je/${line%.sorted.bam}MarkDuplicated_Je.bam \
-      MM=1 SLOTS=-1 ASSUME_SORTED=true \
-      METRICS_FILE=/path/to/output/MarkDuplicated_Je/${line%.sorted.bam}MarkDuplicated_Je.txt \
-      REMOVE_DUPLICATES=true
-      # Add other necessary parameters if used
+    # --- Configuration ---
+    JE_JAR_PATH="[path/to/je.jar]" # Path to the Je JAR file
+    JAVA_MEM="[e.g., 8g]" # Java heap memory allocation
+    INPUT_BAM="$line" # Assumes $line holds the path to the sorted BAM from step 2
+    OUTPUT_PREFIX="/path/to/output/MarkDuplicated_Je/$(basename ${INPUT_BAM%.sorted.bam})" # Base for output files
+
+    # --- Command ---
+    echo "Marking duplicates for $INPUT_BAM..."
+    java -Xmx$JAVA_MEM -jar $JE_JAR_PATH markdupes \
+      INPUT=$INPUT_BAM \
+      OUTPUT="${OUTPUT_PREFIX}MarkDuplicated_Je.bam" \
+      METRICS_FILE="${OUTPUT_PREFIX}MarkDuplicated_Je.txt" \
+      MM=1 `# Max mismatches allowed in UMI` \
+      SLOTS=-1 `# Parameter specific to Je` \
+      ASSUME_SORTED=true `# Input BAM is coordinate sorted` \
+      REMOVE_DUPLICATES=true `# Remove duplicate reads instead of just marking them`
+      # [TODO: Add other relevant Je parameters used, e.g., READ_NAME_REGEX if UMIs are complex]
+    
+    if [ $? -eq 0 ]; then
+        echo "Successfully marked/removed duplicates for $INPUT_BAM"
+    else
+        echo "ERROR during duplicate marking for $INPUT_BAM"
+    fi
     ```
-    *[Note: Replace `[Mem]` (e.g., `4g`), `[path/to/je.jar]`, and output paths with appropriate values.]*
+    *[Note: Replace `[path/to/je.jar]`, `[e.g., 8g]`, and output paths. Ensure the input `$line` variable correctly points to the BAM file from the previous step.]*
+
 
 6.  **Merge BAMs (if needed):** `bash scripts/merge_bams.sh ...` [TODO: Add specific example]
 
