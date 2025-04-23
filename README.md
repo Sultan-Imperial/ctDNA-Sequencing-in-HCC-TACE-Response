@@ -44,7 +44,6 @@ Our analysis pipeline consists of the following key steps:
 | [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/) | v0.11.9 | Quality control |
 | [BWA](https://github.com/lh3/bwa) | v0.7.17 | Read alignment |
 | [Samtools](http://www.htslib.org/) | v1.14+ | SAM/BAM manipulation |
-| [Je-MarkDuplicates](https://gbcs.embl.de/portal/tiki-index.php?page=Je) | v1.0+ | UMI-aware duplicate marking |
 | [GATK](https://github.com/broadinstitute/gatk) | v4.2.6.1 | Variant calling & filtering |
 | [R](https://www.r-project.org/) | v4.2+ | Statistical analysis |
 | [Python](https://www.python.org/) | v3.9+ | Data processing |
