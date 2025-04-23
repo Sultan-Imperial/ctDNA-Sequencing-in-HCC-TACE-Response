@@ -106,7 +106,7 @@ Edit the `config/pipeline_config.yaml` file to specify paths to reference files 
 *This script processes a list of sample prefixes (one per line, provided as input `$1`), aligning corresponding paired-end FASTQ files (`${prefix}_R1.fastq.gz`, `${prefix}_R2.fastq.gz`) and creating sorted BAM files.*
     ```bash
     #!/bin/bash
-    # --- Configuration (Consider moving these to a config file) ---
+    
     BWA_INDEX_BASE="/path/to/reference/GRCh38.fa" # BWA index prefix
     OUTPUT_BAM_DIR="/path/to/output/BAM"
     TEMP_DIR="/path/to/temp/sorting_temp" # Temporary directory for sorting
@@ -127,8 +127,8 @@ Edit the `config/pipeline_config.yaml` file to specify paths to reference files 
         echo "Processing Sample Prefix: $line"
         
         # Construct FASTQ paths (Assumes files are in the current directory or specified path)
-        FASTQ1="${line}_R1.fastq.gz" # [TODO: Adjust path/naming if needed]
-        FASTQ2="${line}_R2.fastq.gz" # [TODO: Adjust path/naming if needed]
+        FASTQ1="${line}_R1.fastq.gz" # [Adjust path/naming if needed]
+        FASTQ2="${line}_R2.fastq.gz" # [Adjust path/naming if needed]
         
         # Check if FASTQ files exist
         if [[ ! -f "$FASTQ1" || ! -f "$FASTQ2" ]]; then
