@@ -182,7 +182,7 @@ Edit the `config/pipeline_config.yaml` file to specify paths to reference files 
     # --- Configuration ---
     JE_JAR_PATH="[path/to/je.jar]" # Path to the Je JAR file
     JAVA_MEM="[e.g., 8g]" # Java heap memory allocation
-    INPUT_BAM="$line" # Assumes $line holds the path to the sorted BAM from step 2
+    INPUT_BAM="$line" # Assumes $line holds the path to the sorted BAM
     OUTPUT_PREFIX="/path/to/output/MarkDuplicated_Je/$(basename ${INPUT_BAM%.sorted.bam})" # Base for output files
 
     # --- Command ---
@@ -195,7 +195,7 @@ Edit the `config/pipeline_config.yaml` file to specify paths to reference files 
       SLOTS=-1 `# Parameter specific to Je` \
       ASSUME_SORTED=true `# Input BAM is coordinate sorted` \
       REMOVE_DUPLICATES=true `# Remove duplicate reads instead of just marking them`
-      # [TODO: Add other relevant Je parameters used, e.g., READ_NAME_REGEX if UMIs are complex]
+      
     
     if [ $? -eq 0 ]; then
         echo "Successfully marked/removed duplicates for $INPUT_BAM"
