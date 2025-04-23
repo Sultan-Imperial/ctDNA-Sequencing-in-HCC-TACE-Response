@@ -107,7 +107,7 @@ Edit the `config/pipeline_config.yaml` file to specify paths to reference files 
     ```bash
     #!/bin/bash
     # --- Configuration (Consider moving these to a config file) ---
-    BWA_INDEX_BASE="/path/to/reference/BWA_GRCh38.fa" # BWA index prefix
+    BWA_INDEX_BASE="/path/to/reference/GRCh38.fa" # BWA index prefix
     OUTPUT_BAM_DIR="/path/to/output/BAM"
     TEMP_DIR="/path/to/temp/sorting_temp" # Temporary directory for sorting
     THREADS=8 # Number of threads for BWA and Samtools
