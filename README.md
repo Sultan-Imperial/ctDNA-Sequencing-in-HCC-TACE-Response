@@ -212,19 +212,23 @@ Edit the `config/pipeline_config.yaml` file to specify paths to reference files 
     samtools merge -@ $THREADS /path/to/output/merged/${sample_id}.merged.bam /path/to/input/${sample_id}.run1.bam /path/to/input/${sample_id}.run2.bam
     ```
 
-7.  **Downstream Analysis (GATK Example Script):**
+5.  **Downstream Analysis (GATK Example Script):**
     *The following script demonstrates BQSR, Mutect2 variant calling, filtering, and annotation steps using GATK 4.2.6.1. It expects a file containing a list of input BAM file paths as its first argument (`$1`). Adjust paths to tools, reference files, and output directories.*
     ```bash
     #!/bin/bash
 
     # --- Configuration ---
-    GATK_PATH="/path/to/gatk-4.2.6.1/gatk" # Path to GATK executable
-    GENOME="/path/to/BWA_GRCh38.fa"
-    DBSNP="/path/to/Homo_sapiens_assembly38.dbsnp138.vcf"
-    BED_FILE="/path/to/Rohini_target_merged.bed"
-    PON="/path/to/1000g_pon.hg38.vcf.gz" # Panel of Normals
-    GERMLINE_RESOURCE="/path/to/af-only-gnomad.hg38.vcf.gz"
-    FUNCOTATOR_DATASOURCES="/path/to/funcotator_dataSources.v1.7.20200521s"
+    GATK_PATH="/path/to/gatk-4.2.6.1/gatk"
+    GENOME="/path/to/reference/GRCh38.fa"
+    DBSNP="/path/to/reference/Homo_sapiens_assembly38.dbsnp138.vcf"
+    BED_FILE="/path/to/HCC_panel_target_regions.bed"
+    PON="/path/to/reference/1000g_pon.hg38.vcf.gz"
+    GERMLINE_RESOURCE="/path/to/reference/af-only-gnomad.hg38.vcf.gz"
+    FUNCOTATOR_DATASOURCES="/path/to/reference/funcotator_dataSources.v1.7.20200521s"
+    JAVA_OPTS="-Xmx8g" # Example Java options for GATK
+
+
+
 
     # Output Directories (Create if they don't exist)
     RECAL_TABLE_DIR="/path/to/output/Recalibrated_dataTable"
