@@ -32,7 +32,7 @@ Our analysis pipeline consists of the following key steps:
 4. **Base Quality Recalibration**: Improve base quality scores
 5. **Variant Calling & Filtering**: Identify and filter somatic variants
 6. **Variant Annotation**: Functionally annotate variants
-7. **Downstream Analysis**: Statistical analysis and visualization
+7. **Downstream Analysis**: GATK Example Script
 
 ## Prerequisites
 
@@ -210,7 +210,7 @@ fasterq-dump --split-files SRR*
     samtools merge -@ $THREADS /path/to/output/merged/${sample_id}.merged.bam /path/to/input/${sample_id}.run1.bam /path/to/input/${sample_id}.run2.bam
     ```
 
-4.  **Downstream Analysis (GATK Example Script):**
+4.  **Downstream Analysis (GATK Script):**
     *The following script demonstrates BQSR, Mutect2 variant calling, filtering, and annotation steps using GATK 4.2.6.1. It expects a file containing a list of input BAM file paths as its first argument (`$1`). Adjust paths to tools, reference 
     files, and output directories.*
 ```bash
