@@ -210,7 +210,8 @@ Edit the `config/pipeline_config.yaml` file to specify paths to reference files 
         echo "ERROR during duplicate marking for $INPUT_BAM"
     fi
     ```
-    *[Note: Replace `[path/to/je.jar]`, `[e.g., 8g]`, and output paths. Ensure the input `$line` variable correctly points to the BAM file from the previous step.]*
+    
+   *[Note: Replace `[path/to/je.jar]`, `[e.g., 8g]`, and output paths. Ensure the input `$line` variable correctly points to the BAM file from the previous step.]*
 
 
 4.  **Merge BAMs (if needed):**
@@ -220,7 +221,8 @@ Edit the `config/pipeline_config.yaml` file to specify paths to reference files 
     ```
 
 5.  **Downstream Analysis (GATK Example Script):**
-    *The following script demonstrates BQSR, Mutect2 variant calling, filtering, and annotation steps using GATK 4.2.6.1. It expects a file containing a list of input BAM file paths as its first argument (`$1`). Adjust paths to tools, reference files, and output directories.*
+    *The following script demonstrates BQSR, Mutect2 variant calling, filtering, and annotation steps using GATK 4.2.6.1. It expects a file containing a list of input BAM file paths as its first argument (`$1`). Adjust paths to tools, reference 
+    files, and output directories.*
 ```bash
 #!/bin/bash
 set -e  # Exit on error
@@ -371,7 +373,7 @@ done < "$INPUT_LIST_FILE"
 
 log_message "GATK pipeline steps complete."
 ```
-    *[Note: This script is an example. You **must** replace placeholder paths (e.g., `/path/to/...`) with actual paths on your system. Ensure GATK, reference files, and input BAM list are correctly specified. The script includes basic error handling for the input file argument.]*
+*[Note: This script is an example. You **must** replace placeholder paths (e.g., `/path/to/...`) with actual paths on your system. Ensure GATK, reference files, and input BAM list are correctly specified. The script includes basic error handling for the input file argument.]*
 
 ## Disclaimer and Support
 
