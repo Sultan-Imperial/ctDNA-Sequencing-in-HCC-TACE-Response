@@ -227,9 +227,6 @@ Edit the `config/pipeline_config.yaml` file to specify paths to reference files 
     FUNCOTATOR_DATASOURCES="/path/to/reference/funcotator_dataSources.v1.7.20200521s"
     JAVA_OPTS="-Xmx8g" # Example Java options for GATK
 
-
-
-
     # Output Directories (Create if they don't exist)
     RECAL_TABLE_DIR="/path/to/output/Recalibrated_dataTable"
     RECAL_BAM_DIR="/path/to/output/Recalibrated_BAM"
@@ -243,70 +240,62 @@ Edit the `config/pipeline_config.yaml` file to specify paths to reference files 
 
     mkdir -p $RECAL_TABLE_DIR $RECAL_BAM_DIR $MUTECT_BAM_DIR $MUTECT_VCF_DIR $F1R2_DIR $ORIENT_MODEL_DIR $FILTERED_VCF_DIR $ANNOTATED_VCF_DIR $MAF_DIR
 
-    # --- Processing Loop ---
-    # Input: File containing one BAM path per line (passed as $1)
-    if [ -z "$1" ]; then
-      echo "Usage: $0 <file_with_bam_paths>"
-      exit 1
-    fi
+    # --- Input Validation ---
+    if [ -z "$1" ]; then echo "Usage: $0 <file_with_bam_paths>"; exit 1; fi
+    INPUT_LIST_FILE="$1"
 
+    # --- Processing Loop ---
     while IFS= read -r line || [[ -n "$line" ]]; do
-        echo "Processing BAM: $line"
+        echo "Processing GATK steps for BAM: $line"
         
         # Extract base filename for output naming
         base_name=$(basename "${line%MarkDuplicated_Je.bam}") # Assumes input ends with MarkDuplicated_Je.bam
         recal_base_name=$(basename "${line%_recalibrated.bam}") # For steps after ApplyBQSR if naming changes
 
         # --- GATK Steps ---
-        echo "Step 1: BaseRecalibrator"
-        $GATK_PATH BaseRecalibrator \
+        echo "Step 5.1: BaseRecalibrator - Generate recalibration table"
+        $GATK_PATH --java-options "$JAVA_OPTS" BaseRecalibrator \
           -I "$line" \
-          --reference "$GENOME" \
+          -R "$GENOME" \
           --known-sites "$DBSNP" \
-          --intervals "$BED_FILE" \
-          --output "$RECAL_TABLE_DIR/${base_name}_recal_data.table"
+          -L "$BED_FILE" `# Process only target intervals` \
+          -O "$RECAL_TABLE_DIR/${base_name}_recal_data.table"
 
-        echo "Step 2: ApplyBQSR"
-        $GATK_PATH ApplyBQSR \
+        echo "Step 5.2: ApplyBQSR - Apply recalibration to reads"
+        $GATK_PATH --java-options "$JAVA_OPTS" ApplyBQSR \
           -I "$line" \
-          --reference "$GENOME" \
+          -R "$GENOME" \
           --bqsr-recal-file "$RECAL_TABLE_DIR/${base_name}_recal_data.table" \
-          --intervals "$BED_FILE" \
+          -L "$BED_FILE" \
           -O "$RECAL_BAM_DIR/${base_name}_recalibrated.bam"
         
-        # Define recalibrated BAM path for subsequent steps
         recal_bam="$RECAL_BAM_DIR/${base_name}_recalibrated.bam"
-        recal_base_name=$(basename "${recal_bam%_recalibrated.bam}") # Update base name for VCF outputs
+        
+        echo "Step 5.3: Mutect2 - Call somatic variants"
+        $GATK_PATH --java-options "$JAVA_OPTS" Mutect2 \
+          -R "$GENOME" \
+          -I "$recal_bam" \
+          -L "$BED_FILE" \
+          --panel-of-normals "$PON" `# Filter common artifacts/germline variants` \
+          --f1r2-tar-gz "$F1R2_DIR/${base_name}_f1r2.tar.gz" `# Output for orientation bias modeling` \
+          --bam-output "$MUTECT_BAM_DIR/${base_name}_mutect2.bam" `# Optional: BAM showing realigned reads` \
+          -O "$MUTECT_VCF_DIR/${base_name}_unfiltered.vcf"
 
-        echo "Step 3: Mutect2"
-        $GATK_PATH Mutect2 \
-          --reference "$GENOME" \
-          --panel-of-normals "$PON" \
-          --germline-resource "$GERMLINE_RESOURCE" \
-          --intervals "$BED_FILE" \
-          --input "$recal_bam" \
-          --bam-output "$MUTECT_BAM_DIR/${recal_base_name}_output.bam" \
-          --output "$MUTECT_VCF_DIR/${recal_base_name}_unfiltered.vcf" \
-          --f1r2-tar-gz "$F1R2_DIR/${recal_base_name}_f1r2.tar.gz" \
-          --force-active true --initial-tumor-lod 0.0 --tumor-lod-to-emit 0.0 -genotype-pon-sites true
-
-        echo "Step 4: LearnReadOrientationModel"
+        echo "Step 5.4: LearnReadOrientationModel - Model orientation bias"
         $GATK_PATH LearnReadOrientationModel \
-          --input "$F1R2_DIR/${recal_base_name}_f1r2.tar.gz" \
-          --output "$ORIENT_MODEL_DIR/${recal_base_name}_read-orientation-model.tar.gz"
+          -I "$F1R2_DIR/${base_name}_f1r2.tar.gz" \
+          -O "$ORIENT_MODEL_DIR/${base_name}_read-orientation-model.tar.gz"
 
-        echo "Step 5: FilterMutectCalls"
+        echo "Step 5.5: FilterMutectCalls - Filter variant calls"
         $GATK_PATH FilterMutectCalls \
-          --reference "$GENOME" \
-          --intervals "$BED_FILE" \
-          --ob-priors "$ORIENT_MODEL_DIR/${recal_base_name}_read-orientation-model.tar.gz" \
-          --variant "$MUTECT_VCF_DIR/${recal_base_name}_unfiltered.vcf" \
-          --output "$FILTERED_VCF_DIR/${recal_base_name}_filtered.vcf" \
-          --lenient true --min-median-base-quality 10 --f-score-beta 1
-          # Note: The original example had --input $line here, which seems incorrect; should likely use --variant
+          -R "$GENOME" \
+          -V "$MUTECT_VCF_DIR/${base_name}_unfiltered.vcf" \
+          -L "$BED_FILE" \
+          --ob-priors "$ORIENT_MODEL_DIR/${base_name}_read-orientation-model.tar.gz" `# Use orientation model` \
+          -O "$FILTERED_VCF_DIR/${base_name}_filtered.vcf"
 
-        # Optional: VariantAnnotator (Example - adapt input/output as needed)
-        # echo "Step 6: VariantAnnotator"
+        # Optional: VariantAnnotator
+        # echo "Step 5.6: VariantAnnotator - Add standard annotations"
         # $GATK_PATH VariantAnnotator \
         #  --reference "$GENOME" \
         #  -I "$recal_bam" \
@@ -315,79 +304,24 @@ Edit the `config/pipeline_config.yaml` file to specify paths to reference files 
         #  --enable-all-annotations \
         #  --dbsnp "$DBSNP"
 
-        echo "Step 7: Funcotator (MAF Output)"
-        $GATK_PATH Funcotator \
+        echo "Step 5.7: Funcotator - Add functional annotations (MAF format)"
+        $GATK_PATH --java-options "$JAVA_OPTS" Funcotator \
+          --variant "$FILTERED_VCF_DIR/${base_name}_filtered.vcf" \
           --reference "$GENOME" \
           --ref-version hg38 \
-          --intervals "$BED_FILE" \
           --data-sources-path "$FUNCOTATOR_DATASOURCES" \
-          --output "$MAF_DIR/${recal_base_name}.maf" \
+          --output "$MAF_DIR/${base_name}.maf" \
           --output-file-format MAF \
-          --variant "$FILTERED_VCF_DIR/${recal_base_name}_filtered.vcf" \
+          -L "$BED_FILE" \
           --remove-filtered-variants true
-          # Note: The original example had --input $line here, which seems incorrect for Funcotator variant input
 
-        echo "Finished processing: $line"
+        echo "Finished GATK processing for: $line"
         echo "---"
 
-    done < "$1"
-
-    echo "All BAM files processed."
-
+    done < "$INPUT_LIST_FILE"
+    echo "GATK pipeline steps complete."
     ```
     *[Note: This script is an example. You **must** replace placeholder paths (e.g., `/path/to/...`) with actual paths on your system. Ensure GATK, reference files, and input BAM list are correctly specified. The script includes basic error handling for the input file argument.]*
-
-    **Alternative Mutect2 Examples:**
-    *The following examples show alternative ways to run `gatk Mutect2` directly, assuming the input BAM file path is in the `$line` variable (e.g., within a loop reading from a file list passed as `$1`). Adjust paths to GATK, reference, intervals, and output directories.*
-
-    *Example 1: Basic Mutect2 call*
-    ```bash
-    #!/bin/bash
-    GATK_PATH="/path/to/gatk-4.2.6.1/gatk"
-    GENOME="/path/to/BWA_GRCh38.fa"
-    BED_FILE="/path/to/Rohini_target_merged.bed"
-    OUTPUT_DIR="/path/to/output/Mutect2_LastOne"
-    mkdir -p $OUTPUT_DIR
-
-    if [ -z "$1" ]; then echo "Usage: $0 <file_with_bam_paths>"; exit 1; fi
-
-    while IFS= read -r line || [[ -n "$line" ]]; do
-        echo "Processing BAM (Basic Mutect2): $line"
-        base_name=$(basename "${line%.marked_duplicates.bam}") # Assumes input ends differently here
-        $GATK_PATH Mutect2 \
-          --reference "$GENOME" \
-          --input "$line" \
-          --output "$OUTPUT_DIR/${base_name}.unfiltered.vcf" \
-          --intervals "$BED_FILE"
-    done < "$1"
-    ```
-
-    *Example 2: Mutect2 with enhanced annotations*
-    ```bash
-    #!/bin/bash
-    GATK_PATH="/path/to/gatk-4.2.6.1/gatk"
-    GENOME="/path/to/BWA_GRCh38.fa"
-    BED_FILE="/path/to/Rohini_target_merged.bed"
-    OUTPUT_DIR="/path/to/output/VCF_Mutect2"
-    mkdir -p $OUTPUT_DIR
-
-    if [ -z "$1" ]; then echo "Usage: $0 <file_with_bam_paths>"; exit 1; fi
-
-    while IFS= read -r line || [[ -n "$line" ]]; do
-        echo "Processing BAM (Annotated Mutect2): $line"
-        base_name=$(basename "${line%.marked_duplicates.bam}") # Assumes input ends differently here
-        $GATK_PATH Mutect2 \
-          --input "$line" \
-          --output "$OUTPUT_DIR/${base_name}.vcf" \
-          --reference "$GENOME" \
-          --annotation Coverage \
-          --f1r2-max-depth 200000000 \
-          --genotype-germline-sites true \
-          --intervals "$BED_FILE" \
-          --max-reads-per-alignment-start 0 \
-          --enable-all-annotations true
-    done < "$1"
-    ```
 
 ## Disclaimer and Support
 
