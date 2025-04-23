@@ -104,12 +104,8 @@ Edit the `config/pipeline_config.yaml` file to specify paths to reference files 
 ## Usage
 
 ### Workflow Steps:
-
-
-1.  **UMI Extraction & QC:** `bash scripts/preprocess_reads.sh ...` [TODO: Add specific example]
-
    
-2.  **Alignment & Sorting (BWA + Samtools):**
+1.  **Alignment & Sorting (BWA + Samtools):**
 *This script processes a list of sample prefixes (one per line, provided as input `$1`), aligning corresponding paired-end FASTQ files (`${prefix}_R1.fastq.gz`, `${prefix}_R2.fastq.gz`) and creating sorted BAM files.*
     ```bash
     #!/bin/bash
@@ -183,7 +179,7 @@ Edit the `config/pipeline_config.yaml` file to specify paths to reference files 
     *[Note: Replace placeholder paths. Adjust threads (`-t`, `-@`) and memory (`-m`) based on your system. Ensure BWA index exists.]*
 
 
-3.  **Mark Duplicates (Je Example):**
+2.  **Mark Duplicates (Je Example):**
     *This command processes a single sorted BAM file (path assumed to be in `$line`) to mark duplicates using UMIs.*
     ```bash
     # --- Configuration ---
@@ -214,13 +210,13 @@ Edit the `config/pipeline_config.yaml` file to specify paths to reference files 
    *[Note: Replace `[path/to/je.jar]`, `[e.g., 8g]`, and output paths. Ensure the input `$line` variable correctly points to the BAM file from the previous step.]*
 
 
-4.  **Merge BAMs (if needed):**
+3.  **Merge BAMs (if needed):**
     ```bash
     # Example using samtools merge if multiple BAMs per sample exist
     samtools merge -@ $THREADS /path/to/output/merged/${sample_id}.merged.bam /path/to/input/${sample_id}.run1.bam /path/to/input/${sample_id}.run2.bam
     ```
 
-5.  **Downstream Analysis (GATK Example Script):**
+4.  **Downstream Analysis (GATK Example Script):**
     *The following script demonstrates BQSR, Mutect2 variant calling, filtering, and annotation steps using GATK 4.2.6.1. It expects a file containing a list of input BAM file paths as its first argument (`$1`). Adjust paths to tools, reference 
     files, and output directories.*
 ```bash
@@ -297,7 +293,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
     base_name=${base_name%_MarkDuplicated_Je}
 
     # --- GATK Steps ---
-    # Step 5.1: Generate recalibration table
+    # Step 4.1: Generate recalibration table
     log_message "Step 5.1: BaseRecalibrator - Generate recalibration table"
     $GATK_PATH --java-options "$JAVA_OPTS" BaseRecalibrator \
         -I "$line" \
@@ -306,7 +302,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
         -L "$BED_FILE" \
         -O "$RECAL_TABLE_DIR/${base_name}_recal_data.table" || error_exit "BaseRecalibrator failed"
 
-    # Step 5.2: Apply recalibration to reads
+    # Step 4.2: Apply recalibration to reads
     log_message "Step 5.2: ApplyBQSR - Apply recalibration to reads"
     $GATK_PATH --java-options "$JAVA_OPTS" ApplyBQSR \
         -I "$line" \
@@ -317,7 +313,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
     
     recal_bam="$RECAL_BAM_DIR/${base_name}_recalibrated.bam"
     
-    # Step 5.3: Call somatic variants
+    # Step 4.3: Call somatic variants
     log_message "Step 5.3: Mutect2 - Call somatic variants"
     $GATK_PATH --java-options "$JAVA_OPTS" Mutect2 \
         -R "$GENOME" \
@@ -329,13 +325,13 @@ while IFS= read -r line || [[ -n "$line" ]]; do
         --bam-output "$MUTECT_BAM_DIR/${base_name}_mutect2.bam" \
         -O "$MUTECT_VCF_DIR/${base_name}_unfiltered.vcf" || error_exit "Mutect2 failed"
 
-    # Step 5.4: Model orientation bias
+    # Step 4.4: Model orientation bias
     log_message "Step 5.4: LearnReadOrientationModel - Model orientation bias"
     $GATK_PATH LearnReadOrientationModel \
         -I "$F1R2_DIR/${base_name}_f1r2.tar.gz" \
         -O "$ORIENT_MODEL_DIR/${base_name}_read-orientation-model.tar.gz" || error_exit "LearnReadOrientationModel failed"
 
-    # Step 5.5: Filter variant calls
+    # Step 4.5: Filter variant calls
     log_message "Step 5.5: FilterMutectCalls - Filter variant calls"
     $GATK_PATH FilterMutectCalls \
         -R "$GENOME" \
@@ -345,7 +341,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
         -O "$FILTERED_VCF_DIR/${base_name}_filtered.vcf" || error_exit "FilterMutectCalls failed"
 
     # Optional: VariantAnnotator
-    # log_message "Step 5.6: VariantAnnotator - Add standard annotations"
+    # log_message "Step 4.6: VariantAnnotator - Add standard annotations"
     # $GATK_PATH VariantAnnotator \
     #     --reference "$GENOME" \
     #     -I "$recal_bam" \
@@ -354,8 +350,8 @@ while IFS= read -r line || [[ -n "$line" ]]; do
     #     --enable-all-annotations \
     #     --dbsnp "$DBSNP" || error_exit "VariantAnnotator failed"
 
-    # Step 5.7: Add functional annotations (MAF format)
-    log_message "Step 5.7: Funcotator - Add functional annotations (MAF format)"
+    # Step 4.7: Add functional annotations (MAF format)
+    log_message "Step 4.7: Funcotator - Add functional annotations (MAF format)"
     $GATK_PATH --java-options "$JAVA_OPTS" Funcotator \
         --variant "$FILTERED_VCF_DIR/${base_name}_filtered.vcf" \
         --reference "$GENOME" \
