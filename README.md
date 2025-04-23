@@ -18,11 +18,9 @@ The primary purpose of this repository is to provide the code used for the analy
 
 ## Data Availability
 
-The raw sequencing data generated and analysed during this study have been submitted to the National Center for Biotechnology Information (NCBI) Sequence Read Archive (SRA) and are available under the BioProject accession number: **PRJNA1199049**.
+Raw sequencing data generated in this study are available from the NCBI Sequence Read Archive (SRA):
 
-You can access the data here: [https://www.ncbi.nlm.nih.gov/bioproject/PRJNA1199049](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA1199049)
-
-[TODO: Specify if any essential intermediate data files needed to run the scripts *directly* are included in this repository. If not, state clearly that only scripts are provided and raw data must be obtained from NCBI and processed.]
+- **BioProject:** [PRJNA1199049](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA1199049)
 
 ## Repository Contents
 
