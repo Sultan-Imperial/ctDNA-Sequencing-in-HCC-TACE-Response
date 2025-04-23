@@ -342,11 +342,10 @@ This repository provides supplementary code to accompany the publication mention
 While this repository primarily serves to document the analysis for our publication, we welcome issue reports for critical errors that prevent reproduction of our results.
 ## License
 
-[TODO: Choose an open-source license (e.g., MIT, Apache 2.0, GPLv3) for your code. Create a `LICENSE` file in your repository containing the full license text and state the chosen license here.]
+This project is licensed under a custom Academic Use License - see the [LICENSE](LICENSE) file for details.
 
-*Example: This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.*
+This license allows free use for academic and research purposes only, while prohibiting commercial use without explicit permission. We encourage academic collaboration and only request proper citation when using this work in research or publications.
 
-*Note: If no license is specified, default copyright laws apply, restricting reuse.*
 
 ## Contact / Maintainers
 
