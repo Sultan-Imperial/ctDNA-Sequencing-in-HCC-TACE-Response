@@ -28,7 +28,7 @@ Our analysis pipeline consists of the following key steps:
 
 1. **UMI Processing & QC**: Extract UMIs from trimmed PE reads and perform quality control
 2. **Alignment & Sorting**: Map reads to GRCh38 reference genome and sort alignments
-3. **Duplicate Marking**: UMI-aware deduplication
+3. **Duplicate Marking**: UMI-tool
 4. **Base Quality Recalibration**: Improve base quality scores
 5. **Variant Calling & Filtering**: Identify and filter somatic variants
 6. **Variant Annotation**: Functionally annotate variants
