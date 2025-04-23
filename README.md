@@ -34,6 +34,21 @@ Our analysis pipeline consists of the following key steps:
 6. **Variant Annotation**: Functionally annotate variants
 7. **Downstream Analysis**: Statistical analysis and visualization
 
+## Prerequisites
+
+### Software Requirements
+
+| Software | Version | Purpose |
+|----------|---------|---------|
+| [UMI-tools](https://github.com/CGATOxford/UMI-tools) | v1.0.0 | UMI extraction and processing |
+| [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/) | v0.11.9 | Quality control |
+| [BWA](https://github.com/lh3/bwa) | v0.7.17 | Read alignment |
+| [Samtools](http://www.htslib.org/) | v1.14+ | SAM/BAM manipulation |
+| [Je-MarkDuplicates](https://gbcs.embl.de/portal/tiki-index.php?page=Je) | v1.0+ | UMI-aware duplicate marking |
+| [GATK](https://github.com/broadinstitute/gatk) | v4.2.6.1 | Variant calling & filtering |
+| [R](https://www.r-project.org/) | v4.2+ | Statistical analysis |
+| [Python](https://www.python.org/) | v3.9+ | Data processing |
+
 ### Prerequisites
 
 * Java Runtime Environment (for Je & GATK)
@@ -68,16 +83,6 @@ Our analysis pipeline consists of the following key steps:
 
 [TODO: Adjust these steps based on your actual project setup and how the scripts expect data.]
 
-## Analysis Pipeline Overview
-
-1.  **UMI Processing:** Extract UMIs from trimmed PE reads (`UMI-tools` v1.0.0).
-2.  **QC:** Assess quality (`FastQC` v0.11.9).
-3.  **Alignment:** Align reads to GRCh38 (`BWA` v.0.7.17).
-4.  **Duplicate Marking:** Mark/remove PCR duplicates using UMIs (`Je MarkDuplicatesWithMolecularCode`).
-5.  **Base Quality Score Recalibration (BQSR):** Recalibrate base quality scores using known variants (`GATK BaseRecalibrator`, `ApplyBQSR`).
-6.  **Variant Calling:** Identify somatic variants (`GATK Mutect2`).
-7.  **Variant Filtering & Annotation:** Filter variants based on various metrics and annotate them (`GATK FilterMutectCalls`, `VariantAnnotator`, `Funcotator`).
-8.  **BAM Merging:** Merge BAMs per sample across lanes/runs (if applicable, may occur earlier).
 
 ## Usage
 
