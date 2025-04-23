@@ -96,9 +96,26 @@ Edit the `config/pipeline_config.yaml` file to specify paths to reference files 
 
 ## Usage
 
-[TODO: Provide concise, step-by-step execution instructions with example commands for each pipeline stage.]
+### Workflow Steps:
 
-*Example Workflow Steps:*
+```bash
+# 1. Preprocess reads (UMI extraction & QC)
+bash scripts/1_preprocess_reads.sh sample_list.txt
+
+# 2. Alignment
+bash scripts/2_alignment.sh sample_list.txt
+
+# 3. Mark duplicates with UMIs
+bash scripts/3_mark_duplicates.sh bam_list.txt
+
+# 4. BQSR & variant calling
+bash scripts/4_bqsr_and_variant_calling.sh recal_bam_list.txt
+
+# 5. Statistical analysis
+Rscript scripts/5_statistical_analysis.R
+```
+
+
 
 1.  **UMI Extraction & QC:** `bash scripts/preprocess_reads.sh ...` [TODO: Add specific example]
 2.  **Alignment:** `bash scripts/run_alignment.sh ...` [TODO: Add specific example]
