@@ -221,113 +221,156 @@ Edit the `config/pipeline_config.yaml` file to specify paths to reference files 
 
 5.  **Downstream Analysis (GATK Example Script):**
     *The following script demonstrates BQSR, Mutect2 variant calling, filtering, and annotation steps using GATK 4.2.6.1. It expects a file containing a list of input BAM file paths as its first argument (`$1`). Adjust paths to tools, reference files, and output directories.*
-    ```bash
-    #!/bin/bash
+```bash
+#!/bin/bash
+set -e  # Exit on error
 
-    # --- Configuration ---
-    GATK_PATH="/path/to/gatk-4.2.6.1/gatk"
-    GENOME="/path/to/reference/GRCh38.fa"
-    DBSNP="/path/to/reference/Homo_sapiens_assembly38.dbsnp138.vcf"
-    BED_FILE="/path/to/HCC_panel_target_regions.bed"
-    PON="/path/to/reference/1000g_pon.hg38.vcf.gz"
-    GERMLINE_RESOURCE="/path/to/reference/af-only-gnomad.hg38.vcf.gz"
-    FUNCOTATOR_DATASOURCES="/path/to/reference/funcotator_dataSources.v1.7.20200521s"
-    JAVA_OPTS="-Xmx8g" # Example Java options for GATK
+# --- Configuration ---
+GATK_PATH="/path/to/gatk-4.2.6.1/gatk"
+GENOME="/path/to/reference/GRCh38.fa"
+DBSNP="/path/to/reference/Homo_sapiens_assembly38.dbsnp138.vcf"
+BED_FILE="/path/to/HCC_panel_target_regions.bed"
+PON="/path/to/reference/1000g_pon.hg38.vcf.gz"
+GERMLINE_RESOURCE="/path/to/reference/af-only-gnomad.hg38.vcf.gz"
+FUNCOTATOR_DATASOURCES="/path/to/reference/funcotator_dataSources.v1.7.20200521s"
+JAVA_OPTS="-Xmx8g" # Example Java options for GATK
 
-    # Output Directories (Create if they don't exist)
-    RECAL_TABLE_DIR="/path/to/output/Recalibrated_dataTable"
-    RECAL_BAM_DIR="/path/to/output/Recalibrated_BAM"
-    MUTECT_BAM_DIR="/path/to/output/Final_VCF_Mutect2/OutputBAM"
-    MUTECT_VCF_DIR="/path/to/output/Final_VCF_Mutect2/RawData_VCF"
-    F1R2_DIR="/path/to/output/Final_VCF_Mutect2/F1R2"
-    ORIENT_MODEL_DIR="/path/to/output/Final_VCF_Mutect2/F1R2" # Often same as F1R2
-    FILTERED_VCF_DIR="/path/to/output/Final_VCF_Mutect2/OptimizinngmutectFiltering"
-    ANNOTATED_VCF_DIR="/path/to/output/Final_VCF_Mutect2/AnnotatedVCF" # Example dir for VariantAnnotator
-    MAF_DIR="/path/to/output/Final_VCF_Mutect2/MAF_output" # Example dir for Funcotator
+# --- Output Directories ---
+RECAL_TABLE_DIR="/path/to/output/Recalibrated_dataTable"
+RECAL_BAM_DIR="/path/to/output/Recalibrated_BAM"
+MUTECT_BAM_DIR="/path/to/output/Final_VCF_Mutect2/OutputBAM"
+MUTECT_VCF_DIR="/path/to/output/Final_VCF_Mutect2/RawData_VCF"
+F1R2_DIR="/path/to/output/Final_VCF_Mutect2/F1R2"
+ORIENT_MODEL_DIR="/path/to/output/Final_VCF_Mutect2/F1R2"
+FILTERED_VCF_DIR="/path/to/output/Final_VCF_Mutect2/OptimizinngmutectFiltering"
+ANNOTATED_VCF_DIR="/path/to/output/Final_VCF_Mutect2/AnnotatedVCF"
+MAF_DIR="/path/to/output/Final_VCF_Mutect2/MAF_output"
 
-    mkdir -p $RECAL_TABLE_DIR $RECAL_BAM_DIR $MUTECT_BAM_DIR $MUTECT_VCF_DIR $F1R2_DIR $ORIENT_MODEL_DIR $FILTERED_VCF_DIR $ANNOTATED_VCF_DIR $MAF_DIR
+# --- Error handling function ---
+error_exit() {
+    echo "Error: ${1:-"Unknown Error"}" 1>&2
+    exit 1
+}
 
-    # --- Input Validation ---
-    if [ -z "$1" ]; then echo "Usage: $0 <file_with_bam_paths>"; exit 1; fi
-    INPUT_LIST_FILE="$1"
+# --- Logging function ---
+log_message() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+}
 
-    # --- Processing Loop ---
-    while IFS= read -r line || [[ -n "$line" ]]; do
-        echo "Processing GATK steps for BAM: $line"
-        
-        # Extract base filename for output naming
-        base_name=$(basename "${line%MarkDuplicated_Je.bam}") # Assumes input ends with MarkDuplicated_Je.bam
-        recal_base_name=$(basename "${line%_recalibrated.bam}") # For steps after ApplyBQSR if naming changes
+# --- Initial Validation ---
+# Check if GATK exists
+command -v $GATK_PATH >/dev/null 2>&1 || error_exit "GATK not found at $GATK_PATH"
 
-        # --- GATK Steps ---
-        echo "Step 5.1: BaseRecalibrator - Generate recalibration table"
-        $GATK_PATH --java-options "$JAVA_OPTS" BaseRecalibrator \
-          -I "$line" \
-          -R "$GENOME" \
-          --known-sites "$DBSNP" \
-          -L "$BED_FILE" `# Process only target intervals` \
-          -O "$RECAL_TABLE_DIR/${base_name}_recal_data.table"
+# Check required input files
+for file in "$GENOME" "$DBSNP" "$BED_FILE" "$PON" "$GERMLINE_RESOURCE" "$FUNCOTATOR_DATASOURCES"; do
+    [ -f "$file" ] || error_exit "Required file not found: $file"
+done
 
-        echo "Step 5.2: ApplyBQSR - Apply recalibration to reads"
-        $GATK_PATH --java-options "$JAVA_OPTS" ApplyBQSR \
-          -I "$line" \
-          -R "$GENOME" \
-          --bqsr-recal-file "$RECAL_TABLE_DIR/${base_name}_recal_data.table" \
-          -L "$BED_FILE" \
-          -O "$RECAL_BAM_DIR/${base_name}_recalibrated.bam"
-        
-        recal_bam="$RECAL_BAM_DIR/${base_name}_recalibrated.bam"
-        
-        echo "Step 5.3: Mutect2 - Call somatic variants"
-        $GATK_PATH --java-options "$JAVA_OPTS" Mutect2 \
-          -R "$GENOME" \
-          -I "$recal_bam" \
-          -L "$BED_FILE" \
-          --panel-of-normals "$PON" `# Filter common artifacts/germline variants` \
-          --f1r2-tar-gz "$F1R2_DIR/${base_name}_f1r2.tar.gz" `# Output for orientation bias modeling` \
-          --bam-output "$MUTECT_BAM_DIR/${base_name}_mutect2.bam" `# Optional: BAM showing realigned reads` \
-          -O "$MUTECT_VCF_DIR/${base_name}_unfiltered.vcf"
+# Create output directories
+for dir in "$RECAL_TABLE_DIR" "$RECAL_BAM_DIR" "$MUTECT_BAM_DIR" "$MUTECT_VCF_DIR" \
+           "$F1R2_DIR" "$ORIENT_MODEL_DIR" "$FILTERED_VCF_DIR" "$ANNOTATED_VCF_DIR" "$MAF_DIR"; do
+    mkdir -p "$dir" || error_exit "Cannot create directory: $dir"
+done
 
-        echo "Step 5.4: LearnReadOrientationModel - Model orientation bias"
-        $GATK_PATH LearnReadOrientationModel \
-          -I "$F1R2_DIR/${base_name}_f1r2.tar.gz" \
-          -O "$ORIENT_MODEL_DIR/${base_name}_read-orientation-model.tar.gz"
+# --- Input Validation ---
+if [ -z "$1" ]; then 
+    echo "Usage: $0 <file_with_bam_paths>"
+    exit 1
+fi
 
-        echo "Step 5.5: FilterMutectCalls - Filter variant calls"
-        $GATK_PATH FilterMutectCalls \
-          -R "$GENOME" \
-          -V "$MUTECT_VCF_DIR/${base_name}_unfiltered.vcf" \
-          -L "$BED_FILE" \
-          --ob-priors "$ORIENT_MODEL_DIR/${base_name}_read-orientation-model.tar.gz" `# Use orientation model` \
-          -O "$FILTERED_VCF_DIR/${base_name}_filtered.vcf"
+INPUT_LIST_FILE="$1"
+[ -f "$INPUT_LIST_FILE" ] || error_exit "Input list file not found: $INPUT_LIST_FILE"
 
-        # Optional: VariantAnnotator
-        # echo "Step 5.6: VariantAnnotator - Add standard annotations"
-        # $GATK_PATH VariantAnnotator \
-        #  --reference "$GENOME" \
-        #  -I "$recal_bam" \
-        #  --variant "$FILTERED_VCF_DIR/${recal_base_name}_filtered.vcf" \
-        #  --output "$ANNOTATED_VCF_DIR/${recal_base_name}_annotated.vcf" \
-        #  --enable-all-annotations \
-        #  --dbsnp "$DBSNP"
+# --- Processing Loop ---
+while IFS= read -r line || [[ -n "$line" ]]; do
+    if [ -z "$line" ]; then continue; fi  # Skip empty lines
+    
+    log_message "Processing GATK steps for BAM: $line"
+    
+    # Validate input BAM exists
+    [ -f "$line" ] || error_exit "Input BAM file not found: $line"
+    
+    # Extract base filename for output naming
+    base_name=$(basename "$line" .bam)
+    base_name=${base_name%_MarkDuplicated_Je}
 
-        echo "Step 5.7: Funcotator - Add functional annotations (MAF format)"
-        $GATK_PATH --java-options "$JAVA_OPTS" Funcotator \
-          --variant "$FILTERED_VCF_DIR/${base_name}_filtered.vcf" \
-          --reference "$GENOME" \
-          --ref-version hg38 \
-          --data-sources-path "$FUNCOTATOR_DATASOURCES" \
-          --output "$MAF_DIR/${base_name}.maf" \
-          --output-file-format MAF \
-          -L "$BED_FILE" \
-          --remove-filtered-variants true
+    # --- GATK Steps ---
+    # Step 5.1: Generate recalibration table
+    log_message "Step 5.1: BaseRecalibrator - Generate recalibration table"
+    $GATK_PATH --java-options "$JAVA_OPTS" BaseRecalibrator \
+        -I "$line" \
+        -R "$GENOME" \
+        --known-sites "$DBSNP" \
+        -L "$BED_FILE" \
+        -O "$RECAL_TABLE_DIR/${base_name}_recal_data.table" || error_exit "BaseRecalibrator failed"
 
-        echo "Finished GATK processing for: $line"
-        echo "---"
+    # Step 5.2: Apply recalibration to reads
+    log_message "Step 5.2: ApplyBQSR - Apply recalibration to reads"
+    $GATK_PATH --java-options "$JAVA_OPTS" ApplyBQSR \
+        -I "$line" \
+        -R "$GENOME" \
+        --bqsr-recal-file "$RECAL_TABLE_DIR/${base_name}_recal_data.table" \
+        -L "$BED_FILE" \
+        -O "$RECAL_BAM_DIR/${base_name}_recalibrated.bam" || error_exit "ApplyBQSR failed"
+    
+    recal_bam="$RECAL_BAM_DIR/${base_name}_recalibrated.bam"
+    
+    # Step 5.3: Call somatic variants
+    log_message "Step 5.3: Mutect2 - Call somatic variants"
+    $GATK_PATH --java-options "$JAVA_OPTS" Mutect2 \
+        -R "$GENOME" \
+        -I "$recal_bam" \
+        -L "$BED_FILE" \
+        --panel-of-normals "$PON" \
+        --germline-resource "$GERMLINE_RESOURCE" \
+        --f1r2-tar-gz "$F1R2_DIR/${base_name}_f1r2.tar.gz" \
+        --bam-output "$MUTECT_BAM_DIR/${base_name}_mutect2.bam" \
+        -O "$MUTECT_VCF_DIR/${base_name}_unfiltered.vcf" || error_exit "Mutect2 failed"
 
-    done < "$INPUT_LIST_FILE"
-    echo "GATK pipeline steps complete."
-    ```
+    # Step 5.4: Model orientation bias
+    log_message "Step 5.4: LearnReadOrientationModel - Model orientation bias"
+    $GATK_PATH LearnReadOrientationModel \
+        -I "$F1R2_DIR/${base_name}_f1r2.tar.gz" \
+        -O "$ORIENT_MODEL_DIR/${base_name}_read-orientation-model.tar.gz" || error_exit "LearnReadOrientationModel failed"
+
+    # Step 5.5: Filter variant calls
+    log_message "Step 5.5: FilterMutectCalls - Filter variant calls"
+    $GATK_PATH FilterMutectCalls \
+        -R "$GENOME" \
+        -V "$MUTECT_VCF_DIR/${base_name}_unfiltered.vcf" \
+        -L "$BED_FILE" \
+        --ob-priors "$ORIENT_MODEL_DIR/${base_name}_read-orientation-model.tar.gz" \
+        -O "$FILTERED_VCF_DIR/${base_name}_filtered.vcf" || error_exit "FilterMutectCalls failed"
+
+    # Optional: VariantAnnotator
+    # log_message "Step 5.6: VariantAnnotator - Add standard annotations"
+    # $GATK_PATH VariantAnnotator \
+    #     --reference "$GENOME" \
+    #     -I "$recal_bam" \
+    #     --variant "$FILTERED_VCF_DIR/${base_name}_filtered.vcf" \
+    #     --output "$ANNOTATED_VCF_DIR/${base_name}_annotated.vcf" \
+    #     --enable-all-annotations \
+    #     --dbsnp "$DBSNP" || error_exit "VariantAnnotator failed"
+
+    # Step 5.7: Add functional annotations (MAF format)
+    log_message "Step 5.7: Funcotator - Add functional annotations (MAF format)"
+    $GATK_PATH --java-options "$JAVA_OPTS" Funcotator \
+        --variant "$FILTERED_VCF_DIR/${base_name}_filtered.vcf" \
+        --reference "$GENOME" \
+        --ref-version hg38 \
+        --data-sources-path "$FUNCOTATOR_DATASOURCES" \
+        --output "$MAF_DIR/${base_name}.maf" \
+        --output-file-format MAF \
+        -L "$BED_FILE" \
+        --remove-filtered-variants true || error_exit "Funcotator failed"
+
+    log_message "Finished GATK processing for: $line"
+    log_message "---"
+
+done < "$INPUT_LIST_FILE"
+
+log_message "GATK pipeline steps complete."
+```
     *[Note: This script is an example. You **must** replace placeholder paths (e.g., `/path/to/...`) with actual paths on your system. Ensure GATK, reference files, and input BAM list are correctly specified. The script includes basic error handling for the input file argument.]*
 
 ## Disclaimer and Support
@@ -351,7 +394,7 @@ This license allows free use for academic and research purposes only, while proh
 
 This code was developed by the authors of the publication:
 
-* Rohini Sharma, Sultan N. Alharbi, Ksenia Ellum, Leila Motedayen-Aval, Andrea Casadei-Gardini, David J. Pinato, Dominik Bettinger, Bertram Bengsch, Rishi Patel, Joanne Evans.
+* Rohini Sharma, Sultan N. Alharbi.
 
 For questions about the scientific findings, please refer to the publication or contact the corresponding author listed therein.
 
